@@ -1,13 +1,15 @@
 import tkinter as tk
+from tkinter import Button
 from PIL import Image, ImageTk
 from config import *
-from ui_components import create_button
+from modules.ui_components import create_button
 from button_functions import *
-from led_matrix import LEDMatrix
+from modules.led_matrix import LEDMatrix
+from modules.status_window import StatusWindow
 
 # Create window
 root = tk.Tk()
-root.title("Binary Calculator Circuit Simulator")
+root.title("Binary Calculator Simulation")
 root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 root.resizable(False, False)
 
@@ -17,6 +19,9 @@ canvas.place(x=0, y=0, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
 
 # Initialize LED Matrix
 led_matrix = LEDMatrix(canvas)
+
+# Initialize Status Window
+status_window = StatusWindow(root)
 
 # Load and resize image
 image = Image.open("images/circuit_light.png")
@@ -82,8 +87,15 @@ def create_button_with_led_update(root, text, command, width_chars, height_chars
     def wrapped_command():
         command()  # Execute original command
         update_led_display()  # Update LED display
+        # Update status window if it's open
+        if hasattr(status_window, 'window') and status_window.window and status_window.window.winfo_exists():
+            status_window.refresh_data()
     
     return create_button(root, text, wrapped_command, width_chars, height_chars, tooltip)
+
+def show_status_window():
+    """Show the status window"""
+    status_window.show_window()
 
 # Button creation and setup
 buttons = {}
@@ -117,6 +129,11 @@ for button_id, text, command, tooltip in button_definitions:
         BUTTON_POSITIONS[button_id][1], 
         window=buttons[button_id]
     )
+
+# Create status button in top-right corner (fixed position on root window)
+status_button = Button(root, text="STATES", command=show_status_window, 
+                      font=("Calibri", 11, 'bold'), width=7, height=1, fg='#121212')
+status_button.place(x=1205, y=10)  # Fixed position in top-right corner
 
 # Initialize LED display with all zeros
 update_led_display()
